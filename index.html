@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Minha Central de Estudos</title>
+    <title>Painel de Estudos Pro</title>
     <style>
         :root { --primary: #1e3c72; --secondary: #2a5298; --accent: #00d2ff; --white: #ffffff; }
         body { font-family: 'Segoe UI', sans-serif; background: linear-gradient(135deg, var(--primary), var(--secondary)); color: #333; margin: 0; padding: 15px; min-height: 100vh; }
@@ -11,18 +11,21 @@
         .card { background: var(--white); border-radius: 15px; padding: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.3); }
         h2 { color: var(--primary); border-bottom: 2px solid #eee; padding-bottom: 10px; margin-top: 0; font-size: 1.2rem; }
         
-        /* BARRA DE PROGRESSO */
         .progress-container { background: #eee; border-radius: 10px; height: 25px; width: 100%; margin: 15px 0; overflow: hidden; border: 1px solid #ddd; }
         #progress-bar { background: var(--accent); height: 100%; width: 0%; transition: 0.5s; text-align: center; color: white; font-size: 12px; line-height: 25px; font-weight: bold; }
 
-        .btn-site { width: 100%; padding: 12px; margin-bottom: 10px; border: none; border-radius: 8px; color: white; font-weight: bold; cursor: pointer; transition: 0.3s; }
-        .bg-enem { background: #27ae60; } .bg-resposta { background: #e74c3c; } .bg-ai { background: #10a37f; }
+        .site-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px; }
+        .btn-site { padding: 12px; border: none; border-radius: 8px; color: white; font-weight: bold; cursor: pointer; transition: 0.3s; font-size: 11px; text-align: center; text-decoration: none; }
+        .bg-enem { background: #27ae60; } .bg-resposta { background: #e74c3c; } .bg-ai { background: #10a37f; } .bg-extra { background: #8e44ad; }
         
-        .timer-display { font-size: 3rem; font-weight: bold; text-align: center; color: #e74c3c; margin: 20px 0; }
-        textarea { width: 100%; height: 100px; border-radius: 10px; padding: 10px; box-sizing: border-box; resize: none; border: 1px solid #ddd; margin-bottom: 10px; }
+        .timer-display { font-size: 3rem; font-weight: bold; text-align: center; color: #e74c3c; margin: 10px 0; }
+        .timer-controls { display: flex; gap: 10px; justify-content: center; margin-bottom: 20px; }
+        .btn-ctrl { padding: 10px 20px; border-radius: 5px; border: none; cursor: pointer; font-weight: bold; color: white; }
+        .btn-pause { background: #f39c12; } .btn-play { background: #2ecc71; }
 
-        .history-list { max-height: 250px; overflow-y: auto; }
-        .history-item { background: #f9f9f9; padding: 10px; border-radius: 8px; margin-bottom: 8px; border-left: 5px solid var(--accent); font-size: 0.85rem; }
+        textarea { width: 100%; height: 80px; border-radius: 10px; padding: 10px; box-sizing: border-box; resize: none; border: 1px solid #ddd; margin-bottom: 10px; }
+        .history-list { max-height: 200px; overflow-y: auto; }
+        .history-item { background: #f9f9f9; padding: 8px; border-radius: 8px; margin-bottom: 8px; border-left: 5px solid var(--accent); font-size: 0.8rem; }
         .quote { text-align: center; color: white; margin-top: 20px; font-style: italic; font-size: 0.9rem; }
         
         @media (max-width: 768px) { .container { grid-template-columns: 1fr; } }
@@ -32,25 +35,32 @@
 
 <div class="container">
     <div class="card">
-        <h2>⏱️ Cronômetro de Estudo</h2>
-        <button onclick="trackSite('Enem Gratuito', 'https://cursoenemgratuito.com.br/')" class="btn-site bg-enem">Enem Gratuito</button>
-        <button onclick="trackSite('Resposta Certa', 'https://www.respostacerta.com.br/')" class="btn-site bg-resposta">Resposta Certa</button>
-        <button onclick="trackSite('IA (GPT/Gemini)', 'https://chatgpt.com/')" class="btn-site bg-ai">Abrir IA Auxiliar</button>
+        <h2>🔗 Atalhos e Estudo</h2>
+        <div class="site-grid">
+            <a href="https://cursoenemgratuito.com.br/" target="_blank" onclick="startTimer()" class="btn-site bg-enem">Enem Gratuito</a>
+            <a href="https://www.respostacerta.com.br/" target="_blank" onclick="startTimer()" class="btn-site bg-resposta">Resposta Certa</a>
+            <a href="https://gemini.google.com/" target="_blank" onclick="startTimer()" class="btn-site bg-ai">Gemini</a>
+            <a href="https://www.estudesemfronteiras.com/" target="_blank" onclick="startTimer()" class="btn-site bg-extra">Sem Fronteiras</a>
+        </div>
 
         <div class="timer-display" id="main-timer">00:00:00</div>
+        
+        <div class="timer-controls">
+            <button class="btn-ctrl btn-play" onclick="startTimer()">RECURAR</button>
+            <button class="btn-ctrl btn-pause" onclick="pauseTimer()">PAUSAR</button>
+        </div>
 
         <h2>🎯 Meta do Dia (6 Horas)</h2>
         <div class="progress-container"><div id="progress-bar">0%</div></div>
         
-        <textarea id="daily-summary" placeholder="O que você aprendeu hoje? (Ex: Resumo de Biologia ou Programação)"></textarea>
-        <button onclick="saveDay()" style="width: 100%; padding: 15px; background: var(--primary); color: white; border: none; border-radius: 10px; font-weight: bold; cursor: pointer;">CONCLUIR E SALVAR HOJE</button>
+        <textarea id="daily-summary" placeholder="O que aprendeu em Matemática ou Programação hoje?"></textarea>
+        <button onclick="saveDay()" style="width: 100%; padding: 15px; background: var(--primary); color: white; border: none; border-radius: 10px; font-weight: bold; cursor: pointer;">SALVAR NO HISTÓRICO</button>
     </div>
 
     <div class="card">
-        <h2>📅 Histórico de Estudos</h2>
-        <div class="history-list" id="history-display">
-            </div>
-        <button onclick="clearHistory()" style="margin-top: 10px; background: none; border: none; color: #999; cursor: pointer; font-size: 0.7rem; text-decoration: underline;">Limpar histórico</button>
+        <h2>📅 Histórico Acumulado</h2>
+        <div class="history-list" id="history-display"></div>
+        <button onclick="clearHistory()" style="margin-top: 10px; color: #999; border: none; background: none; cursor: pointer; font-size: 10px;">Zerar histórico</button>
     </div>
 </div>
 
@@ -58,22 +68,22 @@
 
 <script>
     let seconds = 0;
-    let timerActive = false;
+    let timerInterval = null;
 
-    // Carrega histórico ao abrir
     window.onload = renderHistory;
 
-    function trackSite(name, url) {
-        timerActive = true;
-        window.open(url, '_blank');
-    }
-
-    setInterval(() => {
-        if (timerActive) {
+    function startTimer() {
+        if (timerInterval) return;
+        timerInterval = setInterval(() => {
             seconds++;
             updateUI();
-        }
-    }, 1000);
+        }, 1000);
+    }
+
+    function pauseTimer() {
+        clearInterval(timerInterval);
+        timerInterval = null;
+    }
 
     function updateUI() {
         const h = Math.floor(seconds / 3600).toString().padStart(2, '0');
@@ -81,54 +91,41 @@
         const s = (seconds % 60).toString().padStart(2, '0');
         document.getElementById('main-timer').innerText = `${h}:${m}:${s}`;
 
-        // Barra de Progresso (Meta de 6h = 21600s)
         let percent = Math.min((seconds / 21600) * 100, 100);
-        const bar = document.getElementById('progress-bar');
-        bar.style.width = percent + "%";
-        bar.innerText = Math.floor(percent) + "%";
+        document.getElementById('progress-bar').style.width = percent + "%";
+        document.getElementById('progress-bar').innerText = Math.floor(percent) + "%";
     }
 
     function saveDay() {
-        if (seconds === 0) return alert("Cronômetro zerado!");
-        
-        const summary = document.getElementById('daily-summary').value;
+        if (seconds === 0) return alert("Tempo está em zero!");
         const entry = {
             date: new Date().toLocaleDateString('pt-BR'),
             time: document.getElementById('main-timer').innerText,
-            note: summary || "Sem anotações"
+            note: document.getElementById('daily-summary').value || "Sem nota"
         };
-
-        let history = JSON.parse(localStorage.getItem('meus_estudos_hist') || "[]");
+        let history = JSON.parse(localStorage.getItem('estudos_v3') || "[]");
         history.unshift(entry);
-        localStorage.setItem('meus_estudos_hist', JSON.stringify(history));
+        localStorage.setItem('estudos_v3', JSON.stringify(history));
         
-        // Reset
+        pauseTimer();
         seconds = 0;
-        timerActive = false;
         document.getElementById('daily-summary').value = "";
         updateUI();
         renderHistory();
-        alert("Dia salvo com sucesso!");
+        alert("Progresso diário salvo!");
     }
 
     function renderHistory() {
-        const history = JSON.parse(localStorage.getItem('meus_estudos_hist') || "[]");
-        const display = document.getElementById('history-display');
-        display.innerHTML = history.map(item => `
+        const history = JSON.parse(localStorage.getItem('estudos_v3') || "[]");
+        document.getElementById('history-display').innerHTML = history.map(item => `
             <div class="history-item">
-                <b>${item.date}</b> - Tempo: ${item.time}<br>
-                <small>${item.note}</small>
+                <b>${item.date}</b> - ${item.time}<br>
+                <i>${item.note}</i>
             </div>
         `).join('');
     }
 
-    function clearHistory() {
-        if(confirm("Deseja apagar todo o histórico?")) {
-            localStorage.removeItem('meus_estudos_hist');
-            renderHistory();
-        }
-    }
+    function clearHistory() { if(confirm("Apagar tudo?")) { localStorage.removeItem('estudos_v3'); renderHistory(); } }
 </script>
-
 </body>
 </html>
