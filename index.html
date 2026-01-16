@@ -3,39 +3,34 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sistema de Estudos - Acesso</title>
+    <title>Meu Monitor de Estudos Cloud</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         :root { --primary: #1e3c72; --secondary: #2a5298; --accent: #00d2ff; --white: #ffffff; }
         body { font-family: 'Segoe UI', sans-serif; background: linear-gradient(135deg, var(--primary), var(--secondary)); color: #333; margin: 0; display: flex; align-items: center; justify-content: center; min-height: 100vh; }
         .card { background: var(--white); border-radius: 15px; padding: 30px; box-shadow: 0 10px 25px rgba(0,0,0,0.3); width: 100%; max-width: 400px; }
-        .main-content { max-width: 1000px; display: none; grid-template-columns: 1fr 1fr; gap: 20px; width: 95%; margin: 20px auto; }
-        
-        input { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; }
+        .main-content { max-width: 1100px; display: none; grid-template-columns: 1fr 1fr; gap: 20px; width: 95%; margin: 20px auto; }
+        input, textarea { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; font-family: inherit; }
         button { width: 100%; padding: 12px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; transition: 0.3s; margin-top: 10px; }
         .btn-primary { background: var(--primary); color: white; }
-        .btn-link { background: none; color: var(--secondary); text-decoration: underline; font-size: 0.9rem; }
-
-        /* Estilos do Painel (após login) */
-        .panel-card { background: white; padding: 20px; border-radius: 15px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
-        .timer-display { font-size: 3rem; font-weight: bold; text-align: center; color: #e74c3c; }
+        .timer-display { font-size: 3.5rem; font-weight: bold; text-align: center; color: #e74c3c; margin: 10px 0; }
         .site-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px; }
-        .btn-site { padding: 10px; border-radius: 8px; color: white; text-align: center; text-decoration: none; font-size: 12px; font-weight: bold; }
-        
+        .btn-site { padding: 12px; border-radius: 8px; color: white; text-align: center; text-decoration: none; font-size: 11px; font-weight: bold; }
+        .history-item { background:#f4f7f6; padding:12px; margin-bottom:10px; border-radius:8px; border-left:5px solid var(--accent); font-size: 0.85rem; }
         @media (max-width: 768px) { .main-content { grid-template-columns: 1fr; } }
     </style>
 </head>
 <body>
 
 <div id="login-screen" class="card">
-    <h2 id="auth-title">Entrar no Sistema</h2>
-    <input type="text" id="username" placeholder="Usuário">
-    <input type="password" id="password" placeholder="Senha">
-    <button class="btn-primary" onclick="handleAuth()" id="auth-btn">ENTRAR</button>
-    <button class="btn-link" onclick="toggleAuthMode()" id="toggle-btn">Não tem conta? Cadastre-se</button>
+    <h2 style="text-align:center; color:var(--primary)">Acesso aos Estudos</h2>
+    <p style="text-align:center; font-size: 0.8rem; color: #666;">Os dados salvos aqui serão sincronizados em todos os seus aparelhos.</p>
+    <input type="text" id="username" placeholder="Digite seu usuário">
+    <button class="btn-primary" onclick="login()">ENTRAR AGORA</button>
 </div>
 
 <div id="study-panel" class="main-content">
-    <div class="panel-card">
+    <div class="card" style="max-width: 100%;">
         <h2>🚀 Olá, <span id="user-display"></span>!</h2>
         <div class="site-grid">
             <a href="https://cursoenemgratuito.com.br/" target="_blank" onclick="startTimer()" class="btn-site" style="background:#27ae60">Enem Gratuito</a>
@@ -45,71 +40,49 @@
         </div>
         <div class="timer-display" id="main-timer">00:00:00</div>
         <div style="display:flex; gap:10px; justify-content:center;">
-            <button onclick="startTimer()" style="background:#2ecc71; color:white; width: 80px;">Play</button>
-            <button onclick="pauseTimer()" style="background:#f39c12; color:white; width: 80px;">Pause</button>
+            <button onclick="startTimer()" style="background:#2ecc71; color:white; flex:1">PLAY</button>
+            <button onclick="pauseTimer()" style="background:#f39c12; color:white; flex:1">PAUSE</button>
         </div>
-        <button class="btn-primary" style="margin-top:20px;" onclick="saveDay()">SALVAR DIA</button>
-        <button class="btn-link" onclick="logout()">Sair do Sistema</button>
+        <textarea id="study-note" placeholder="O que você está estudando agora? (Ex: Matemática no trabalho)"></textarea>
+        <button class="btn-primary" onclick="saveToCloud()">SALVAR NA NUVEM</button>
+        <button onclick="location.reload()" style="background: none; color: #999; font-size: 0.7rem; text-decoration: underline;">Trocar de Usuário / Sair</button>
     </div>
 
-    <div class="panel-card">
-        <h2>📅 Histórico de Estudos</h2>
-        <div id="history-display"></div>
+    <div class="card" style="max-width: 100%;">
+        <h2>📅 Histórico Sincronizado</h2>
+        <div id="history-display" style="max-height: 450px; overflow-y: auto;">Buscando seus registros na nuvem...</div>
     </div>
 </div>
 
 <script>
-    let isLoginMode = true;
+    // CONFIGURAÇÃO JÁ CONECTADA COM SEU SUPABASE
+    const supabaseUrl = 'https://eprzxmdrmuvwjkxwuumj.supabase.co'; 
+    const supabaseKey = 'sb_publishable_fe-zUC8N7TkMFPU2AIE36A_NQGC2zJQ';
+    const _supabase = supabase.createClient(supabaseUrl, supabaseKey);
+
+    let currentUser = "";
     let seconds = 0;
     let timerInterval = null;
 
-    // --- SISTEMA DE LOGIN/CADASTRO ---
-    function toggleAuthMode() {
-        isLoginMode = !isLoginMode;
-        document.getElementById('auth-title').innerText = isLoginMode ? "Entrar no Sistema" : "Criar Cadastro";
-        document.getElementById('auth-btn').innerText = isLoginMode ? "ENTRAR" : "CADASTRAR";
-        document.getElementById('toggle-btn').innerText = isLoginMode ? "Não tem conta? Cadastre-se" : "Já tem conta? Faça Login";
-    }
-
-    function handleAuth() {
-        const user = document.getElementById('username').value;
-        const pass = document.getElementById('password').value;
-
-        if (!user || !pass) return alert("Preencha todos os campos!");
-
-        if (isLoginMode) {
-            const savedPass = localStorage.getItem(`user_${user}`);
-            if (savedPass === pass) {
-                showPanel(user);
-            } else {
-                alert("Usuário ou senha incorretos!");
-            }
-        } else {
-            localStorage.setItem(`user_${user}`, pass);
-            alert("Cadastro realizado! Agora faça login.");
-            toggleAuthMode();
-        }
-    }
-
-    function showPanel(user) {
+    async function login() {
+        const user = document.getElementById('username').value.trim().toLowerCase();
+        if(!user) return alert("Por favor, digite um nome!");
+        currentUser = user;
         document.getElementById('login-screen').style.display = 'none';
         document.getElementById('study-panel').style.display = 'grid';
-        document.body.style.alignItems = 'flex-start';
         document.getElementById('user-display').innerText = user;
-        renderHistory();
+        loadHistory();
     }
 
-    function logout() { location.reload(); }
-
-    // --- SISTEMA DE ESTUDOS ---
-    function startTimer() {
-        if (!timerInterval) {
-            timerInterval = setInterval(() => { seconds++; updateUI(); }, 1000);
-        }
+    function startTimer() { 
+        if(!timerInterval) timerInterval = setInterval(() => { seconds++; updateUI(); }, 1000); 
     }
-
-    function pauseTimer() { clearInterval(timerInterval); timerInterval = null; }
-
+    
+    function pauseTimer() { 
+        clearInterval(timerInterval); 
+        timerInterval = null; 
+    }
+    
     function updateUI() {
         const h = Math.floor(seconds / 3600).toString().padStart(2, '0');
         const m = Math.floor((seconds % 3600) / 60).toString().padStart(2, '0');
@@ -117,26 +90,53 @@
         document.getElementById('main-timer').innerText = `${h}:${m}:${s}`;
     }
 
-    function saveDay() {
-        const entry = {
-            date: new Date().toLocaleDateString('pt-BR'),
-            time: document.getElementById('main-timer').innerText
-        };
-        let history = JSON.parse(localStorage.getItem('hist_estudos') || "[]");
-        history.unshift(entry);
-        localStorage.setItem('hist_estudos', JSON.stringify(history));
-        alert("Salvo!");
-        renderHistory();
+    async function saveToCloud() {
+        if(seconds === 0) return alert("O tempo está zerado!");
+        const note = document.getElementById('study-note').value;
+        const tempoFinal = document.getElementById('main-timer').innerText;
+        
+        const { error } = await _supabase.from('estudos').insert([
+            { 
+                usuario: currentUser, 
+                data: new Date().toLocaleDateString('pt-BR'), 
+                tempo: tempoFinal,
+                resumo: note 
+            }
+        ]);
+
+        if(error) {
+            alert("Erro ao sincronizar: " + error.message);
+        } else {
+            alert("✅ Sincronizado! Dados salvos na nuvem.");
+            seconds = 0; 
+            pauseTimer(); 
+            updateUI(); 
+            document.getElementById('study-note').value = "";
+            loadHistory();
+        }
     }
 
-    function renderHistory() {
-        const history = JSON.parse(localStorage.getItem('hist_estudos') || "[]");
-        document.getElementById('history-display').innerHTML = history.map(item => `
-            <div style="background:#f9f9f9; padding:10px; margin-bottom:5px; border-radius:5px; border-left:4px solid #00d2ff">
-                <b>${item.date}</b>: ${item.time}
-            </div>
-        `).join('');
+    async function loadHistory() {
+        const { data, error } = await _supabase
+            .from('estudos')
+            .select('*')
+            .eq('usuario', currentUser)
+            .order('id', { ascending: false });
+        
+        const display = document.getElementById('history-display');
+        if(data) {
+            display.innerHTML = data.length === 0 ? "Nenhum registro encontrado para este usuário." : data.map(item => `
+                <div class="history-item">
+                    <b>${item.data}</b> — ⏱️ ${item.tempo}<br>
+                    <i style="color:#555">${item.resumo || 'Sem observações'}</i>
+                </div>
+            `).join('');
+        }
     }
+
+    window.onbeforeunload = function() {
+        if (seconds > 0) return "Você tem um tempo não salvo. Deseja realmente sair?";
+    };
 </script>
 </body>
 </html>
