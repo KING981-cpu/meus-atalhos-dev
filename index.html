@@ -3,130 +3,140 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Painel de Estudos Pro</title>
+    <title>Sistema de Estudos - Acesso</title>
     <style>
         :root { --primary: #1e3c72; --secondary: #2a5298; --accent: #00d2ff; --white: #ffffff; }
-        body { font-family: 'Segoe UI', sans-serif; background: linear-gradient(135deg, var(--primary), var(--secondary)); color: #333; margin: 0; padding: 15px; min-height: 100vh; }
-        .container { max-width: 1000px; margin: auto; display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
-        .card { background: var(--white); border-radius: 15px; padding: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.3); }
-        h2 { color: var(--primary); border-bottom: 2px solid #eee; padding-bottom: 10px; margin-top: 0; font-size: 1.2rem; }
+        body { font-family: 'Segoe UI', sans-serif; background: linear-gradient(135deg, var(--primary), var(--secondary)); color: #333; margin: 0; display: flex; align-items: center; justify-content: center; min-height: 100vh; }
+        .card { background: var(--white); border-radius: 15px; padding: 30px; box-shadow: 0 10px 25px rgba(0,0,0,0.3); width: 100%; max-width: 400px; }
+        .main-content { max-width: 1000px; display: none; grid-template-columns: 1fr 1fr; gap: 20px; width: 95%; margin: 20px auto; }
         
-        .progress-container { background: #eee; border-radius: 10px; height: 25px; width: 100%; margin: 15px 0; overflow: hidden; border: 1px solid #ddd; }
-        #progress-bar { background: var(--accent); height: 100%; width: 0%; transition: 0.5s; text-align: center; color: white; font-size: 12px; line-height: 25px; font-weight: bold; }
+        input { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; }
+        button { width: 100%; padding: 12px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; transition: 0.3s; margin-top: 10px; }
+        .btn-primary { background: var(--primary); color: white; }
+        .btn-link { background: none; color: var(--secondary); text-decoration: underline; font-size: 0.9rem; }
 
+        /* Estilos do Painel (após login) */
+        .panel-card { background: white; padding: 20px; border-radius: 15px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
+        .timer-display { font-size: 3rem; font-weight: bold; text-align: center; color: #e74c3c; }
         .site-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px; }
-        .btn-site { padding: 12px; border: none; border-radius: 8px; color: white; font-weight: bold; cursor: pointer; transition: 0.3s; font-size: 11px; text-align: center; text-decoration: none; }
-        .bg-enem { background: #000000; } .bg-resposta { background: #ff1900; } .bg-ai { background: #13b0ff; } .bg-extra { background: #8e44ad; }
+        .btn-site { padding: 10px; border-radius: 8px; color: white; text-align: center; text-decoration: none; font-size: 12px; font-weight: bold; }
         
-        .timer-display { font-size: 3rem; font-weight: bold; text-align: center; color: #e74c3c; margin: 10px 0; }
-        .timer-controls { display: flex; gap: 10px; justify-content: center; margin-bottom: 20px; }
-        .btn-ctrl { padding: 10px 20px; border-radius: 5px; border: none; cursor: pointer; font-weight: bold; color: white; }
-        .btn-pause { background: #f39c12; } .btn-play { background: #2ecc71; }
-
-        textarea { width: 100%; height: 80px; border-radius: 10px; padding: 10px; box-sizing: border-box; resize: none; border: 1px solid #ddd; margin-bottom: 10px; }
-        .history-list { max-height: 200px; overflow-y: auto; }
-        .history-item { background: #f9f9f9; padding: 8px; border-radius: 8px; margin-bottom: 8px; border-left: 5px solid var(--accent); font-size: 0.8rem; }
-        .quote { text-align: center; color: white; margin-top: 20px; font-style: italic; font-size: 0.9rem; }
-        
-        @media (max-width: 768px) { .container { grid-template-columns: 1fr; } }
+        @media (max-width: 768px) { .main-content { grid-template-columns: 1fr; } }
     </style>
 </head>
 <body>
 
-<div class="container">
-    <div class="card">
-        <h2>🔗 Atalhos e Estudo</h2>
+<div id="login-screen" class="card">
+    <h2 id="auth-title">Entrar no Sistema</h2>
+    <input type="text" id="username" placeholder="Usuário">
+    <input type="password" id="password" placeholder="Senha">
+    <button class="btn-primary" onclick="handleAuth()" id="auth-btn">ENTRAR</button>
+    <button class="btn-link" onclick="toggleAuthMode()" id="toggle-btn">Não tem conta? Cadastre-se</button>
+</div>
+
+<div id="study-panel" class="main-content">
+    <div class="panel-card">
+        <h2>🚀 Olá, <span id="user-display"></span>!</h2>
         <div class="site-grid">
-            <a href="https://chatgpt.com/" target="_blank" onclick="startTimer()" class="btn-site bg-enem">Chatgpt</a>
-            <a href="https://www.respostacerta.com.br/" target="_blank" onclick="startTimer()" class="btn-site bg-resposta">Resposta Certa</a>
-            <a href="https://gemini.google.com/" target="_blank" onclick="startTimer()" class="btn-site bg-ai">Gemini</a>
-            <a href="https://www.estudesemfronteiras.com/" target="_blank" onclick="startTimer()" class="btn-site bg-extra">Sem Fronteiras</a>
+            <a href="https://cursoenemgratuito.com.br/" target="_blank" onclick="startTimer()" class="btn-site" style="background:#27ae60">Enem Gratuito</a>
+            <a href="https://www.respostacerta.com.br/" target="_blank" onclick="startTimer()" class="btn-site" style="background:#e74c3c">Resposta Certa</a>
+            <a href="https://gemini.google.com/" target="_blank" onclick="startTimer()" class="btn-site" style="background:#10a37f">Gemini</a>
+            <a href="https://www.estudesemfronteiras.com/" target="_blank" onclick="startTimer()" class="btn-site" style="background:#8e44ad">Sem Fronteiras</a>
         </div>
-
         <div class="timer-display" id="main-timer">00:00:00</div>
-        
-        <div class="timer-controls">
-            <button class="btn-ctrl btn-play" onclick="startTimer()">RECURAR</button>
-            <button class="btn-ctrl btn-pause" onclick="pauseTimer()">PAUSAR</button>
+        <div style="display:flex; gap:10px; justify-content:center;">
+            <button onclick="startTimer()" style="background:#2ecc71; color:white; width: 80px;">Play</button>
+            <button onclick="pauseTimer()" style="background:#f39c12; color:white; width: 80px;">Pause</button>
         </div>
-
-        <h2>🎯 Meta do Dia (6 Horas)</h2>
-        <div class="progress-container"><div id="progress-bar">0%</div></div>
-        
-        <textarea id="daily-summary" placeholder="O que aprendeu em Matemática ou Programação hoje?"></textarea>
-        <button onclick="saveDay()" style="width: 100%; padding: 15px; background: var(--primary); color: white; border: none; border-radius: 10px; font-weight: bold; cursor: pointer;">SALVAR NO HISTÓRICO</button>
+        <button class="btn-primary" style="margin-top:20px;" onclick="saveDay()">SALVAR DIA</button>
+        <button class="btn-link" onclick="logout()">Sair do Sistema</button>
     </div>
 
-    <div class="card">
-        <h2>📅 Histórico Acumulado</h2>
-        <div class="history-list" id="history-display"></div>
-        <button onclick="clearHistory()" style="margin-top: 10px; color: #999; border: none; background: none; cursor: pointer; font-size: 10px;">Zerar histórico</button>
+    <div class="panel-card">
+        <h2>📅 Histórico de Estudos</h2>
+        <div id="history-display"></div>
     </div>
 </div>
 
-<div class="quote">"Organização hoje, aprovação amanhã."</div>
-
 <script>
+    let isLoginMode = true;
     let seconds = 0;
     let timerInterval = null;
 
-    window.onload = renderHistory;
+    // --- SISTEMA DE LOGIN/CADASTRO ---
+    function toggleAuthMode() {
+        isLoginMode = !isLoginMode;
+        document.getElementById('auth-title').innerText = isLoginMode ? "Entrar no Sistema" : "Criar Cadastro";
+        document.getElementById('auth-btn').innerText = isLoginMode ? "ENTRAR" : "CADASTRAR";
+        document.getElementById('toggle-btn').innerText = isLoginMode ? "Não tem conta? Cadastre-se" : "Já tem conta? Faça Login";
+    }
 
+    function handleAuth() {
+        const user = document.getElementById('username').value;
+        const pass = document.getElementById('password').value;
+
+        if (!user || !pass) return alert("Preencha todos os campos!");
+
+        if (isLoginMode) {
+            const savedPass = localStorage.getItem(`user_${user}`);
+            if (savedPass === pass) {
+                showPanel(user);
+            } else {
+                alert("Usuário ou senha incorretos!");
+            }
+        } else {
+            localStorage.setItem(`user_${user}`, pass);
+            alert("Cadastro realizado! Agora faça login.");
+            toggleAuthMode();
+        }
+    }
+
+    function showPanel(user) {
+        document.getElementById('login-screen').style.display = 'none';
+        document.getElementById('study-panel').style.display = 'grid';
+        document.body.style.alignItems = 'flex-start';
+        document.getElementById('user-display').innerText = user;
+        renderHistory();
+    }
+
+    function logout() { location.reload(); }
+
+    // --- SISTEMA DE ESTUDOS ---
     function startTimer() {
-        if (timerInterval) return;
-        timerInterval = setInterval(() => {
-            seconds++;
-            updateUI();
-        }, 1000);
+        if (!timerInterval) {
+            timerInterval = setInterval(() => { seconds++; updateUI(); }, 1000);
+        }
     }
 
-    function pauseTimer() {
-        clearInterval(timerInterval);
-        timerInterval = null;
-    }
+    function pauseTimer() { clearInterval(timerInterval); timerInterval = null; }
 
     function updateUI() {
         const h = Math.floor(seconds / 3600).toString().padStart(2, '0');
         const m = Math.floor((seconds % 3600) / 60).toString().padStart(2, '0');
         const s = (seconds % 60).toString().padStart(2, '0');
         document.getElementById('main-timer').innerText = `${h}:${m}:${s}`;
-
-        let percent = Math.min((seconds / 21600) * 100, 100);
-        document.getElementById('progress-bar').style.width = percent + "%";
-        document.getElementById('progress-bar').innerText = Math.floor(percent) + "%";
     }
 
     function saveDay() {
-        if (seconds === 0) return alert("Tempo está em zero!");
         const entry = {
             date: new Date().toLocaleDateString('pt-BR'),
-            time: document.getElementById('main-timer').innerText,
-            note: document.getElementById('daily-summary').value || "Sem nota"
+            time: document.getElementById('main-timer').innerText
         };
-        let history = JSON.parse(localStorage.getItem('estudos_v3') || "[]");
+        let history = JSON.parse(localStorage.getItem('hist_estudos') || "[]");
         history.unshift(entry);
-        localStorage.setItem('estudos_v3', JSON.stringify(history));
-        
-        pauseTimer();
-        seconds = 0;
-        document.getElementById('daily-summary').value = "";
-        updateUI();
+        localStorage.setItem('hist_estudos', JSON.stringify(history));
+        alert("Salvo!");
         renderHistory();
-        alert("Progresso diário salvo!");
     }
 
     function renderHistory() {
-        const history = JSON.parse(localStorage.getItem('estudos_v3') || "[]");
+        const history = JSON.parse(localStorage.getItem('hist_estudos') || "[]");
         document.getElementById('history-display').innerHTML = history.map(item => `
-            <div class="history-item">
-                <b>${item.date}</b> - ${item.time}<br>
-                <i>${item.note}</i>
+            <div style="background:#f9f9f9; padding:10px; margin-bottom:5px; border-radius:5px; border-left:4px solid #00d2ff">
+                <b>${item.date}</b>: ${item.time}
             </div>
         `).join('');
     }
-
-    function clearHistory() { if(confirm("Apagar tudo?")) { localStorage.removeItem('estudos_v3'); renderHistory(); } }
 </script>
 </body>
 </html>
-
